@@ -1,12 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./index.css">
     <title>Document</title>
 </head>
+
 <body>
+    <div class="canvas">
+        <aside class="vertical-panel">
+            <div class="createButtonsContainer">
+                <div class="createButton" id="createText">
+                    <img src="./public/text-box.png" alt="not available">
+                </div>
+                <div class="createButton" id="createBox">
+                    <img src="./public/3d.png" alt="not available">
+                </div>
+            </div>
+            <div class="layers"></div>
+        </aside>
+        <div class="horizontal-panel">
+            <div class="editButtons">
+                <img src="./public/resize-font-increase.png" alt="not available">
+            </div>
+            <div class="editButtons">
+                <img src="./public/resize-font-decrease.png" alt="not available">
+            </div>
+            <div class="editButtons">
+                <img src="./public/layer-up.png" alt="not available">
+            </div>
+            <div class="editButtons">
+                <img src="./public/layer-down.png" alt="not available">
+            </div>
+            <input class="color-selector" value="#ff0000" type="color">
+        </div>
+    </div>
     <script src="./index.js"></script>
 </body>
+
 </html>

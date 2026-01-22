@@ -1,5 +1,112 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
+
+:root {
+  --selected-color: #56666b;
+}
+
+body,
+html {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: system-ui;
+  color: #f0f0f0;
+  background: url("./public/background.png");
+  background-size: cover;
+  background-position: center;
+}
+
+.canvas {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  z-index: 0;
+}
+.canvas .vertical-panel {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 1rem;
+  height: 90%;
+  border-radius: 0.5rem;
+  width: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: #34393b;
+  z-index: 1;
+}
+.canvas .vertical-panel .createButtonsContainer {
+  height: 15%;
+  width: 95%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.canvas .vertical-panel .createButtonsContainer .selectedButton {
+  background-color: var(--selected-color);
+}
+.canvas .vertical-panel .createButtonsContainer .createButton {
+  width: 80%;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+}
+.canvas .vertical-panel .createButtonsContainer .createButton:hover {
+  background-color: var(--selected-color);
+}
+.canvas .vertical-panel .createButtonsContainer .createButton img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+.canvas .vertical-panel .layers {
+  height: 82%;
+  width: 95%;
+}
+.canvas .horizontal-panel {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 3.5rem;
+  width: 40%;
+  background-color: #34393b;
+  z-index: 1;
+  border-radius: 1rem 1rem 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.canvas .horizontal-panel .editButtons {
+  height: 80%;
+  padding: 5px 20px;
+  transition: all 0.25s ease;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.canvas .horizontal-panel .editButtons:hover {
+  cursor: pointer;
+  background-color: var(--selected-color);
+}
+.canvas .horizontal-panel .editButtons img {
+  height: 60%;
+  aspect-ratio: 1/1;
+  -o-object-fit: contain;
+     object-fit: contain;
+}/*# sourceMappingURL=index.css.map */
