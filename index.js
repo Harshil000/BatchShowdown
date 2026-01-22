@@ -7,6 +7,7 @@ let color = colorSelector.value;
 let Zindex = null;
 let elementsMetaData = null;
 let uniqueIdCounter = null;
+let selectedElement = null;
 
 if (localStorage.getItem('Zindex')) {
     Zindex = localStorage.getItem('Zindex');
@@ -27,9 +28,20 @@ if (localStorage.getItem('elementsMetaData')) {
 }
 
 function syncLocalStorage() {
-    localStorage.setItem('elementsMetaData', JSON.stringify(elementsMetaData));
-    localStorage.setItem('Zindex', Zindex);
-    localStorage.setItem('uniqueIdCounter', uniqueIdCounter);
+    // localStorage.setItem('elementsMetaData', JSON.stringify(elementsMetaData));
+    // localStorage.setItem('Zindex', Zindex);
+    // localStorage.setItem('uniqueIdCounter', uniqueIdCounter);
+}
+
+function throttle(func, delay) {
+    let lastCall = 0;
+    return function(...args) {
+        const now = Date.now();
+        if (now - lastCall >= delay) {
+            lastCall = now;
+            func(...args);
+        }
+    };
 }
 
 createButtons.forEach(button => {
@@ -57,6 +69,27 @@ canvas.addEventListener('pointerdown', (e) => {
         return;
     }
 
+    const previewElement = document.createElement('div')
+    previewElement.style.position = 'absolute';
+    previewElement.style.top = `${e.y}px`;
+    previewElement.style.left = `${e.x}px`;
+    previewElement.style.border = `2px dashed ${color}`;
+    previewElement.style.zIndex = Zindex;
+    previewElement.style.borderRadius = '1rem';
+    canvas.appendChild(previewElement);
+
+    const handleMouseMove = throttle((ev) => {
+        if (!selectedButton) {
+            return;
+        }
+        let height = ev.y - e.y;
+        let width = ev.x - e.x;
+        previewElement.style.height = `${height}px`;
+        previewElement.style.width = `${width}px`;
+    }, 16);
+
+    canvas.addEventListener('pointermove', handleMouseMove);
+
     const handlePointerUp = (ev) => {
         let height = ev.y - e.y;
         let width = ev.x - e.x;
@@ -67,7 +100,9 @@ canvas.addEventListener('pointerdown', (e) => {
         newElement.style.width = `${width}px`;
         newElement.style.backgroundColor = color;
         newElement.style.zIndex = Zindex++;
-        newElement.style.position = 'absolute'
+        newElement.style.padding = '0.5rem';
+        newElement.style.position = 'absolute';
+        newElement.style.borderRadius = '1rem';
 
         const uniqueId = uniqueIdCounter++;
         newElement.setAttribute('data-id', uniqueId);
@@ -104,7 +139,9 @@ canvas.addEventListener('pointerdown', (e) => {
         selectedButton.classList.remove('selectedButton');
         selectedButton = null;
 
+        canvas.removeEventListener('pointermove', handleMouseMove);
         canvas.removeEventListener('pointerup', handlePointerUp);
+        previewElement.remove();
     };
 
     canvas.addEventListener('pointerup', handlePointerUp);
