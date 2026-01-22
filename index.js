@@ -76,17 +76,37 @@ canvas.addEventListener('pointerdown', (e) => {
     previewElement.style.border = `2px dashed ${color}`;
     previewElement.style.zIndex = Zindex;
     previewElement.style.borderRadius = '1rem';
+    previewElement.style.willChange = 'width, height';
+    previewElement.style.pointerEvents = 'none';
     canvas.appendChild(previewElement);
 
-    const handleMouseMove = throttle((ev) => {
+    let rafId = null;
+    let currentMouseX = e.x;
+    let currentMouseY = e.y;
+
+    const updatePreview = () => {
         if (!selectedButton) {
             return;
         }
-        let height = ev.y - e.y;
-        let width = ev.x - e.x;
+        let height = currentMouseY - e.y;
+        let width = currentMouseX - e.x;
         previewElement.style.height = `${height}px`;
         previewElement.style.width = `${width}px`;
-    }, 16);
+    };
+
+    const handleMouseMove = (ev) => {
+        currentMouseX = ev.x;
+        currentMouseY = ev.y;
+        
+        if (rafId) {
+            return;
+        }
+        
+        rafId = requestAnimationFrame(() => {
+            updatePreview();
+            rafId = null;
+        });
+    };
 
     canvas.addEventListener('pointermove', handleMouseMove);
 
@@ -139,6 +159,9 @@ canvas.addEventListener('pointerdown', (e) => {
         selectedButton.classList.remove('selectedButton');
         selectedButton = null;
 
+        if (rafId) {
+            cancelAnimationFrame(rafId);
+        }
         canvas.removeEventListener('pointermove', handleMouseMove);
         canvas.removeEventListener('pointerup', handlePointerUp);
         previewElement.remove();
