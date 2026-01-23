@@ -287,30 +287,30 @@ canvas.addEventListener('pointerdown', (e) => {
 
         function onPointerMove(ev) {
             if (ev.pointerId !== e.pointerId) return;
-            
+
             const dragDistance = Math.sqrt(
-                Math.pow(ev.clientX - dragStartX, 2) + 
+                Math.pow(ev.clientX - dragStartX, 2) +
                 Math.pow(ev.clientY - dragStartY, 2)
             );
-            
+
             if (dragDistance > 5) {
                 isDragging = true;
             }
-            
+
             const canvasRect = canvas.getBoundingClientRect();
             const cardWidth = card.offsetWidth;
             const cardHeight = card.offsetHeight;
-            
+
             let left = ev.clientX - offsetX;
             let top = ev.clientY - offsetY;
             const minLeft = 0;
             const minTop = 0;
             const maxLeft = canvasRect.width - cardWidth;
             const maxTop = canvasRect.height - cardHeight;
-            
+
             left = Math.max(minLeft, Math.min(left, maxLeft));
             top = Math.max(minTop, Math.min(top, maxTop));
-            
+
             card.style.left = left + 'px';
             card.style.top = top + 'px';
         }
@@ -320,16 +320,16 @@ canvas.addEventListener('pointerdown', (e) => {
         function cleanup() {
             const elementId = parseInt(card.getAttribute('data-id'));
             const elementData = elementsMetaData.find(data => data.id === elementId);
-            
+
             if (elementData) {
                 elementData.left = card.style.left;
                 elementData.top = card.style.top;
                 syncLocalStorage();
             }
-            
+
             canvas.removeEventListener('pointermove', onPointerMove);
             canvas.removeEventListener('pointerup', cleanup);
-            
+
             setTimeout(() => {
                 isDragging = false;
             }, 10);
@@ -506,13 +506,42 @@ canvas.addEventListener('keydown', (e) => {
     if (!selectedElement) {
         return;
     }
+    
+    const elementId = parseInt(selectedElement.getAttribute('data-id'));
+    const step = 5;
+    let moved = false;
+    
     if (e.key === 'Delete' || e.key === 'Backspace') {
         selectedElement.remove();
-        elementsMetaData = elementsMetaData.filter(data => data.id !== parseInt(selectedElement.getAttribute('data-id')));
+        elementsMetaData = elementsMetaData.filter(data => data.id !== elementId);
         syncLayers();
         syncLocalStorage();
         selectedElement = null;
         removeElementSelected();
+        return;
+    }
+    
+    if (e.key === 'ArrowUp') {
+        selectedElement.style.top = (parseInt(selectedElement.style.top) - step) + 'px';
+        moved = true;
+    } else if (e.key === 'ArrowDown') {
+        selectedElement.style.top = (parseInt(selectedElement.style.top) + step) + 'px';
+        moved = true;
+    } else if (e.key === 'ArrowLeft') {
+        selectedElement.style.left = (parseInt(selectedElement.style.left) - step) + 'px';
+        moved = true;
+    } else if (e.key === 'ArrowRight') {
+        selectedElement.style.left = (parseInt(selectedElement.style.left) + step) + 'px';
+        moved = true;
+    }
+    
+    if (moved) {
+        const elementData = elementsMetaData.find(d => d.id === elementId);
+        if (elementData) {
+            elementData.top = selectedElement.style.top;
+            elementData.left = selectedElement.style.left;
+            syncLocalStorage();
+        }
     }
 });
 
