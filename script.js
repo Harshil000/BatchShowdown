@@ -368,7 +368,7 @@ canvas.addEventListener('pointerdown', (e) => {
         let card = e.target.closest('.card');
         if (!card) return;
 
-        e.preventDefault(); // Prevent text selection from interfering with drag
+        e.preventDefault();
         isDragging = false;
         dragStartX = e.clientX;
         dragStartY = e.clientY;
