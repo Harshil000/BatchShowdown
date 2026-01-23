@@ -343,7 +343,6 @@ editButtons.forEach(button => {
                     layersMetaData[i].zIndex = layersMetaData[i - 1].zIndex;
                     layersMetaData[i - 1].zIndex = tempZIndex;
 
-                    // Update DOM elements z-index in real-time
                     const element1 = canvas.querySelector(`[data-id="${layersMetaData[i].id}"]`);
                     const element2 = canvas.querySelector(`[data-id="${layersMetaData[i - 1].id}"]`);
                     if (element1) element1.style.zIndex = layersMetaData[i].zIndex;
@@ -354,6 +353,11 @@ editButtons.forEach(button => {
                 }
             }
             syncLayers();
+            if (selectedElement) {
+                const id = selectedElement.getAttribute('data-id');
+                selectedLayer = layersContainer.querySelector(`[data-idLayer="${id}"]`);
+                if (selectedLayer) selectedLayer.classList.add('selected-layer');
+            }
         } else if (layerFunction === 'down') {
             if (parseInt(selectedElement.getAttribute('data-id')) === layersMetaData[layersMetaData.length - 1].id) {
                 return;
@@ -375,6 +379,11 @@ editButtons.forEach(button => {
                 }
             }
             syncLayers();
+            if (selectedElement) {
+                const id = selectedElement.getAttribute('data-id');
+                selectedLayer = layersContainer.querySelector(`[data-idLayer="${id}"]`);
+                if (selectedLayer) selectedLayer.classList.add('selected-layer');
+            }
         }
         syncLocalStorage();
     })
