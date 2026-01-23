@@ -5,6 +5,9 @@ const horizontalPanel = document.querySelector('.horizontal-panel');
 const colorSelector = document.querySelector('.color-selector');
 const layersContainer = document.querySelector('.layers');
 const editButtons = document.querySelectorAll('.editButtons');
+const exportButton = document.querySelector('.export');
+const showcaseText = document.querySelector('.showcase-text');
+const dropdownOptions = document.querySelector('.dropdown-options');
 // Make canvas focusable for keyboard events
 canvas.setAttribute('tabindex', '0');
 
@@ -622,4 +625,92 @@ editButtons.forEach(button => {
         }
         syncLocalStorage();
     })
-}) 
+})
+
+exportButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showcaseText.classList.toggle('expanded');
+    dropdownOptions.classList.toggle('expanded');
+});
+
+document.addEventListener('click', (e) => {
+    if (!exportButton.contains(e.target)) {
+        showcaseText.classList.remove('expanded');
+        dropdownOptions.classList.remove('expanded');
+    }
+});
+
+dropdownOptions.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const exportType = e.target.textContent;
+    
+    if (exportType === 'JSON') {
+        exportAsJSON();
+    } else if (exportType === 'HTML') {
+        exportAsHTML();
+    }
+    
+    showcaseText.classList.remove('expanded');
+    dropdownOptions.classList.remove('expanded');
+});
+
+function exportAsJSON() {
+    const dataStr = JSON.stringify(elementsMetaData, null, 2);
+    downloadFile(dataStr, 'design.json', 'application/json');
+}
+
+function exportAsHTML() {
+    let elementsHTML = '';
+    
+    elementsMetaData.forEach(data => {
+        const styles = `
+            position: absolute;
+            top: ${data.top};
+            left: ${data.left};
+            height: ${data.height};
+            width: ${data.width};
+            background-color: ${data.backgroundColor};
+            z-index: ${data.zIndex};
+            padding: 0.5rem;
+            border-radius: 1rem;
+            transform: ${data.transform || 'none'};
+        `.replace(/\s+/g, ' ').trim();
+        
+        const content = data.type === 'text' ? data.content : '';
+        elementsHTML += `    <div style="${styles}">${content}</div>\n`;
+    });
+    
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exported Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+${elementsHTML}</body>
+</html>`;
+    
+    downloadFile(html, 'design.html', 'text/html');
+}
+
+function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+} 

@@ -212,4 +212,63 @@ body {
         cursor: grab;
         z-index: 10;
     }
+
+    .export {
+        position: absolute;
+        top: 1rem;
+        right: 3rem;
+        padding: 0.5rem 1rem;
+        background-color: #34393b;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        z-index: 9999;
+        @include column-flex;
+        gap: 0.5rem;
+
+        .showcase-text {
+            @include row-flex;
+            transition: all 0.25s ease;
+
+            img {
+                width: 20%;
+                aspect-ratio: 1/1;
+                object-fit: contain;
+                transition: transform 0.3s ease;
+            }
+
+            &.expanded img {
+                transform: rotate(180deg);
+            }
+        }
+
+        .dropdown-options {
+            @include column-flex;
+            gap: 2px;
+            width: 100%;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+            margin-top: 0;
+
+            &.expanded {
+                max-height: 200px;
+                opacity: 1;
+                margin-top: 0.5rem;
+            }
+
+            div {
+                padding: 0.25rem 0.5rem;
+                text-align: center;
+                border-radius: 4px;
+                width: 100%;
+                cursor: pointer;
+                transition: all 0.25s ease;
+
+                &:hover {
+                    background-color: var(--selected-button-color);
+                }
+            }
+        }
+    }
 }
