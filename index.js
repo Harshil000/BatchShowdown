@@ -14,6 +14,7 @@ let Zindex = null;
 let elementsMetaData = null;
 let uniqueIdCounter = null;
 let selectedElement = null;
+let selectedLayer = null;
 let layersMetaData = [];
 let boxNumber = null;
 let textBoxNumber = null;
@@ -57,12 +58,12 @@ function syncLocalStorage() {
 }
 
 function syncLayers() {
-    layersMetaData = elementsMetaData.sort((a, b) => b.zIndex - a.zIndex);
+    layersMetaData = [...elementsMetaData].sort((a, b) => b.zIndex - a.zIndex);
     layersContainer.innerHTML = '';
     layersMetaData.forEach((data) => {
         const layer = document.createElement('span');
         layer.classList.add('layer-item');
-        layer.innerHTML = `${data.type === 'text' ? 'Text ' : 'Box '} ${data.type === 'text' ? data.textBoxNumber : data.boxNumber}`;;
+        layer.innerHTML = `${data.type === 'text' ? 'Text ' : 'Box '} ${data.type === 'text' ? data.textBoxNumber : data.boxNumber}`;
         layer.setAttribute('data-idLayer', data.id);
         layersContainer.appendChild(layer);
     });
@@ -98,26 +99,25 @@ colorSelector.addEventListener('input', (e) => {
 
 function makeElementSelected() {
     selectedElement.classList.add('selected-element');
+    selectedLayer.classList.add('selected-layer');
 }
 
 function removeElementSelected() {
     document.querySelectorAll('.selected-element').forEach(el => el.classList.remove('selected-element'));
+    document.querySelectorAll('.selected-layer').forEach(el => el.classList.remove('selected-layer'));
     selectedElement = null;
+    selectedLayer = null;
 }
 
 layersContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('layer-item')) {
-        // const id = e.target.getAttribute('data-idLayer');
         if (selectedElement === canvas.querySelector(`[data-id="${e.target.getAttribute('data-idLayer')}"]`)) {
-            selectedElement = null;
-            e.target.classList.remove('selected-layer');
             removeElementSelected();
             return;
         }
         removeElementSelected();
         selectedElement = canvas.querySelector(`[data-id="${e.target.getAttribute('data-idLayer')}"]`);
-        document.querySelectorAll('.layer-item').forEach(layer => layer.classList.remove('selected-layer'));
-        e.target.classList.add('selected-layer');
+        selectedLayer = e.target;
         makeElementSelected();
 
         canvas.focus();
@@ -299,27 +299,17 @@ canvas.addEventListener('click', (e) => {
         const id = clickedElement.getAttribute('data-id');
 
         if (selectedElement === clickedElement) {
-            selectedElement = null;
             removeElementSelected();
-            document.querySelectorAll('.layer-item').forEach(layer => layer.classList.remove('selected-layer'));
         } else {
             removeElementSelected();
             selectedElement = clickedElement;
+            selectedLayer = layersContainer.querySelector(`[data-idLayer="${id}"]`);
             makeElementSelected();
 
             canvas.focus();
-
-            document.querySelectorAll('.layer-item').forEach(layer => {
-                if (layer.getAttribute('data-idLayer') === id) {
-                    layer.classList.add('selected-layer');
-                } else {
-                    layer.classList.remove('selected-layer');
-                }
-            });
         }
     } else {
         removeElementSelected();
-        document.querySelectorAll('.layer-item').forEach(layer => layer.classList.remove('selected-layer'));
     }
 })
 
@@ -342,33 +332,50 @@ editButtons.forEach(button => {
         if (!selectedElement) {
             return;
         }
-        // const layerFunction = button.getAttribute('data-layerFunction');
-        // if (layerFunction === 'up') {
-        //     if (selectedElement == layersMetaData[layersMetaData.length - 1].id) {
-        //         return;
-        //     }
-        //     for (let i = 0; i < layersMetaData.length; i++) {
-        //         if (layersMetaData[i].id === parseInt(selectedElement)) {
-        //             layersMetaData[i].zIndex = layersMetaData[i].zIndex + 1;
-        //             layersMetaData[i + 1].zIndex = layersMetaData[i + 1].zIndex - 1;
-        //             break;
-        //         }
-        //     }
-        //     syncLayers();
-        //     syncLocalStorage();
-        // } else if (layerFunction === 'down') {
-        //     if (selectedElement == layersMetaData[0].id) {
-        //         return;
-        //     }
-        //     for (let i = 0; i < layersMetaData.length; i++) {
-        //         if (layersMetaData[i].id === parseInt(selectedElement)) {
-        //             layersMetaData[i].zIndex = layersMetaData[i].zIndex - 1;
-        //             layersMetaData[i - 1].zIndex = layersMetaData[i - 1].zIndex + 1;
-        //             break;
-        //         }
-        //     }
-        // }
-        // syncLayers();
-        // syncLocalStorage();
+        const layerFunction = button.getAttribute('data-layerFunction');
+        if (layerFunction === 'up') {
+            if (parseInt(selectedElement.getAttribute('data-id')) === layersMetaData[0].id) {
+                return;
+            }
+            for (let i = 0; i < layersMetaData.length; i++) {
+                if (layersMetaData[i].id === parseInt(selectedElement.getAttribute('data-id'))) {
+                    let tempZIndex = layersMetaData[i].zIndex;
+                    layersMetaData[i].zIndex = layersMetaData[i - 1].zIndex;
+                    layersMetaData[i - 1].zIndex = tempZIndex;
+
+                    // Update DOM elements z-index in real-time
+                    const element1 = canvas.querySelector(`[data-id="${layersMetaData[i].id}"]`);
+                    const element2 = canvas.querySelector(`[data-id="${layersMetaData[i - 1].id}"]`);
+                    if (element1) element1.style.zIndex = layersMetaData[i].zIndex;
+                    if (element2) element2.style.zIndex = layersMetaData[i - 1].zIndex;
+
+                    elementsMetaData = layersMetaData;
+                    break;
+                }
+            }
+            syncLayers();
+        } else if (layerFunction === 'down') {
+            if (parseInt(selectedElement.getAttribute('data-id')) === layersMetaData[layersMetaData.length - 1].id) {
+                return;
+            }
+            for (let i = 0; i < layersMetaData.length; i++) {
+                if (layersMetaData[i].id === parseInt(selectedElement.getAttribute('data-id'))) {
+                    let tempZIndex = layersMetaData[i].zIndex;
+                    layersMetaData[i].zIndex = layersMetaData[i + 1].zIndex;
+                    layersMetaData[i + 1].zIndex = tempZIndex;
+
+                    // Update DOM elements z-index in real-time
+                    const element1 = canvas.querySelector(`[data-id="${layersMetaData[i].id}"]`);
+                    const element2 = canvas.querySelector(`[data-id="${layersMetaData[i + 1].id}"]`);
+                    if (element1) element1.style.zIndex = layersMetaData[i].zIndex;
+                    if (element2) element2.style.zIndex = layersMetaData[i + 1].zIndex;
+
+                    elementsMetaData = layersMetaData;
+                    break;
+                }
+            }
+            syncLayers();
+        }
+        syncLocalStorage();
     })
 }) 
