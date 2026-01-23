@@ -67,6 +67,26 @@ function syncLocalStorage() {
     localStorage.setItem('textBoxNumber', textBoxNumber);
 }
 
+function clearCanvas() {
+    if (!confirm('Are you sure you want to clear the entire canvas?')) return;
+    
+    document.querySelectorAll('.card').forEach(el => el.remove());
+    
+    elementsMetaData = [];
+    Zindex = 1;
+    uniqueIdCounter = 1;
+    boxNumber = 1;
+    textBoxNumber = 1;
+    selectedElement = null;
+    selectedLayer = null;
+    
+    removeHandles();
+    textEditorholder.classList.remove('visible');
+    
+    syncLocalStorage();
+    syncLayers();
+}
+
 function syncLayers() {
     layersMetaData = [...elementsMetaData].sort((a, b) => b.zIndex - a.zIndex);
     layersContainer.innerHTML = '';
@@ -95,6 +115,7 @@ elementsMetaData.forEach(data => {
     newElement.style.transform = data.transform;
     newElement.style.cursor = 'pointer';
     newElement.classList.add('card');
+    newElement.style.overflow = 'hidden';
     newElement.setAttribute('data-id', data.id);
     if (data.type === 'text') {
         newElement.innerText = data.content;
@@ -473,6 +494,7 @@ canvas.addEventListener('pointerdown', (e) => {
         newElement.style.padding = '0.5rem';
         newElement.style.position = 'absolute';
         newElement.style.borderRadius = '1rem';
+        newElement.style.overflow = 'hidden';
         newElement.style.cursor = 'pointer';
         if (currentMouseY < e.y) {
             newElement.style.transform = 'translateY(-100%)';
@@ -619,10 +641,16 @@ canvas.addEventListener('keydown', (e) => {
 
 editButtons.forEach(button => {
     button.addEventListener('click', () => {
+        const layerFunction = button.getAttribute('data-layerFunction');
+        
+        if (layerFunction === 'clear') {
+            clearCanvas();
+            return;
+        }
+        
         if (!selectedElement) {
             return;
         }
-        const layerFunction = button.getAttribute('data-layerFunction');
         if (layerFunction === 'up') {
             if (parseInt(selectedElement.getAttribute('data-id')) === layersMetaData[0].id) {
                 return;
@@ -757,8 +785,8 @@ ${elementsHTML}</body>
     downloadFile(html, 'design.html', 'text/html');
 }
 
-function downloadFile(content, filename, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
+function downloadFile(content, filename, dataType) {
+    const blob = new Blob([content], { type: dataType });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
