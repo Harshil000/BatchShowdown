@@ -164,4 +164,52 @@ body {
     .selected-element {
         outline: 4px solid green;
     }
+
+    .resize-handle {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background-color: white;
+        border: 2px solid green;
+        border-radius: 2px;
+        z-index: 10;
+
+        &.resize-nw {
+            top: -6px;
+            left: -6px;
+            cursor: nwse-resize;
+        }
+
+        &.resize-ne {
+            top: -6px;
+            right: -6px;
+            cursor: nesw-resize;
+        }
+
+        &.resize-se {
+            bottom: -6px;
+            right: -6px;
+            cursor: nwse-resize;
+        }
+
+        &.resize-sw {
+            bottom: -6px;
+            left: -6px;
+            cursor: nesw-resize;
+        }
+    }
+
+    .rotate-handle {
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 14px;
+        height: 14px;
+        background-color: white;
+        border: 2px solid green;
+        border-radius: 50%;
+        cursor: grab;
+        z-index: 10;
+    }
 }

@@ -99,13 +99,134 @@ colorSelector.addEventListener('input', (e) => {
     color = e.target.value;
 });
 
+function createHandles(element) {
+    removeHandles();
+
+    const corners = ['nw', 'ne', 'se', 'sw'];
+    corners.forEach(corner => {
+        const handle = document.createElement('div');
+        handle.classList.add('resize-handle', `resize-${corner}`);
+        handle.setAttribute('data-corner', corner);
+        element.appendChild(handle);
+    });
+
+    const rotateHandle = document.createElement('div');
+    rotateHandle.classList.add('rotate-handle');
+    element.appendChild(rotateHandle);
+
+    attachResizeListeners(element);
+    attachRotateListener(element);
+}
+
+function removeHandles() {
+    document.querySelectorAll('.resize-handle').forEach(h => h.remove());
+    document.querySelectorAll('.rotate-handle').forEach(h => h.remove());
+}
+
+function attachResizeListeners(element) {
+    const handles = element.querySelectorAll('.resize-handle');
+    handles.forEach(handle => {
+        handle.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            const corner = handle.getAttribute('data-corner');
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const startWidth = element.offsetWidth;
+            const startHeight = element.offsetHeight;
+            const startLeft = element.offsetLeft;
+            const startTop = element.offsetTop;
+
+            function onMove(ev) {
+                const dx = ev.clientX - startX;
+                const dy = ev.clientY - startY;
+
+                let newWidth = startWidth;
+                let newHeight = startHeight;
+                let newLeft = startLeft;
+                let newTop = startTop;
+
+                if (corner.includes('e')) {
+                    newWidth = Math.max(20, startWidth + dx);
+                }
+                if (corner.includes('w')) {
+                    newWidth = Math.max(20, startWidth - dx);
+                    newLeft = startLeft + (startWidth - newWidth);
+                }
+                if (corner.includes('s')) {
+                    newHeight = Math.max(20, startHeight + dy);
+                }
+                if (corner.includes('n')) {
+                    newHeight = Math.max(20, startHeight - dy);
+                    newTop = startTop + (startHeight - newHeight);
+                }
+
+                element.style.width = newWidth + 'px';
+                element.style.height = newHeight + 'px';
+                element.style.left = newLeft + 'px';
+                element.style.top = newTop + 'px';
+            }
+
+            function onUp() {
+                const elementId = parseInt(element.getAttribute('data-id'));
+                const elementData = elementsMetaData.find(d => d.id === elementId);
+                if (elementData) {
+                    elementData.width = element.style.width;
+                    elementData.height = element.style.height;
+                    elementData.left = element.style.left;
+                    elementData.top = element.style.top;
+                    syncLocalStorage();
+                }
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', onUp);
+            }
+
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', onUp);
+        });
+    });
+}
+
+function attachRotateListener(element) {
+    const rotateHandle = element.querySelector('.rotate-handle');
+    if (!rotateHandle) return;
+
+    rotateHandle.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+
+        const rect = element.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        function onMove(ev) {
+            const angle = Math.atan2(ev.clientY - centerY, ev.clientX - centerX);
+            const degrees = angle * (180 / Math.PI) + 90;
+            element.style.transform = `rotate(${degrees}deg)`;
+        }
+
+        function onUp() {
+            const elementId = parseInt(element.getAttribute('data-id'));
+            const elementData = elementsMetaData.find(d => d.id === elementId);
+            if (elementData) {
+                elementData.transform = element.style.transform;
+                syncLocalStorage();
+            }
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+        }
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+    });
+}
 
 function makeElementSelected() {
     selectedElement.classList.add('selected-element');
     selectedLayer.classList.add('selected-layer');
+    createHandles(selectedElement);
 }
 
 function removeElementSelected() {
+    removeHandles();
     document.querySelectorAll('.selected-element').forEach(el => el.classList.remove('selected-element'));
     document.querySelectorAll('.selected-layer').forEach(el => el.classList.remove('selected-layer'));
     selectedElement = null;
@@ -416,7 +537,7 @@ editButtons.forEach(button => {
                     if (element1) element1.style.zIndex = layersMetaData[i].zIndex;
                     if (element2) element2.style.zIndex = layersMetaData[i - 1].zIndex;
 
-                    elementsMetaData = layersMetaData;
+                    elementsMetaData = [...layersMetaData];
                     break;
                 }
             }
@@ -442,7 +563,7 @@ editButtons.forEach(button => {
                     if (element1) element1.style.zIndex = layersMetaData[i].zIndex;
                     if (element2) element2.style.zIndex = layersMetaData[i + 1].zIndex;
 
-                    elementsMetaData = layersMetaData;
+                    elementsMetaData = [...layersMetaData];
                     break;
                 }
             }
