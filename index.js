@@ -130,8 +130,6 @@ layersContainer.addEventListener('click', (e) => {
     }
 });
 
-
-
 function throttle(func, delay) {
     let lastCall = 0;
     return function (...args) {
@@ -304,8 +302,12 @@ canvas.addEventListener('pointerdown', (e) => {
 })
 
 canvas.addEventListener('click', (e) => {
-
     if (selectedButton) {
+        return;
+    }
+
+    // Don't interfere if clicking on panels
+    if (verticalPanel.contains(e.target) || horizontalPanel.contains(e.target)) {
         return;
     }
 
