@@ -266,33 +266,31 @@ function removeElementSelected() {
     textEditorTextarea.value = '';
 }
 
-// Live update text as user types
 textEditorTextarea.addEventListener('input', () => {
-    if (selectedElement && selectedElement.innerText !== undefined) {
-        selectedElement.innerText = textEditorTextarea.value;
-    }
+    selectedElement.innerText = textEditorTextarea.value;
 });
 
-// Live update text color
 textColorSelector.addEventListener('input', () => {
-    if (selectedElement) {
-        selectedElement.style.color = textColorSelector.value;
-    }
+    selectedElement.style.color = textColorSelector.value;
+    textColorSelector.addEventListener('change' , (e) => {
+        elementsMetaData.filter((d) => d.id === parseInt(selectedElement.getAttribute('data-id')))[0].textColor = e.target.value;
+        syncLocalStorage();
+    })
 });
 
 // Save text on Edit button click
 textEditorButton.addEventListener('click', () => {
     if (!selectedElement) return;
-    
+
     const elementId = parseInt(selectedElement.getAttribute('data-id'));
     const elementData = elementsMetaData.find(d => d.id === elementId);
-    
+
     if (elementData && elementData.type === 'text') {
         elementData.content = textEditorTextarea.value;
         elementData.textColor = textColorSelector.value;
         syncLocalStorage();
     }
-    
+
     textEditorholder.classList.remove('visible');
     canvas.focus();
 });
@@ -492,6 +490,7 @@ canvas.addEventListener('pointerdown', (e) => {
 
         if (selectedButton.id == 'createText') {
             newElement.innerText = `Text Box ${textBoxNumber}`;
+            newElement.style.color = '#ffffff';
             elementsMetaData.push({
                 id: uniqueId,
                 top: `${e.y}px`,
@@ -504,6 +503,7 @@ canvas.addEventListener('pointerdown', (e) => {
                 transform: newElement.style.transform,
                 textBoxNumber: textBoxNumber,
                 content: `Text Box ${textBoxNumber}`,
+                textColor: '#ffffff',
             });
             textBoxNumber++;
             syncLayers();
@@ -695,13 +695,13 @@ document.addEventListener('click', (e) => {
 dropdownOptions.addEventListener('click', (e) => {
     e.stopPropagation();
     const exportType = e.target.textContent;
-    
+
     if (exportType === 'JSON') {
         exportAsJSON();
     } else if (exportType === 'HTML') {
         exportAsHTML();
     }
-    
+
     showcaseText.classList.remove('expanded');
     dropdownOptions.classList.remove('expanded');
 });
@@ -713,7 +713,7 @@ function exportAsJSON() {
 
 function exportAsHTML() {
     let elementsHTML = '';
-    
+
     elementsMetaData.forEach(data => {
         const styles = `
             position: absolute;
@@ -727,11 +727,11 @@ function exportAsHTML() {
             border-radius: 1rem;
             transform: ${data.transform || 'none'};
         `.replace(/\s+/g, ' ').trim();
-        
+
         const content = data.type === 'text' ? data.content : '';
         elementsHTML += `    <div style="${styles}">${content}</div>\n`;
     });
-    
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -753,7 +753,7 @@ function exportAsHTML() {
 <body>
 ${elementsHTML}</body>
 </html>`;
-    
+
     downloadFile(html, 'design.html', 'text/html');
 }
 
