@@ -99,6 +99,13 @@ colorSelector.addEventListener('input', (e) => {
     color = e.target.value;
 });
 
+function rgbToHex(rgb) {
+    if (rgb.startsWith('#')) return rgb;
+    const nums = rgb.match(/\d+/g);
+    if (!nums) return '#000000';
+    return '#' + nums.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
+}
+
 function createHandles(element) {
     removeHandles();
 
@@ -222,6 +229,16 @@ function attachRotateListener(element) {
 function makeElementSelected() {
     selectedElement.classList.add('selected-element');
     selectedLayer.classList.add('selected-layer');
+    colorSelector.value = rgbToHex(selectedElement.style.backgroundColor);
+    colorSelector.addEventListener('input', (e) => {
+        selectedElement.style.backgroundColor = e.target.value;
+        const elementId = parseInt(selectedElement.getAttribute('data-id'));
+        const elementData = elementsMetaData.find(d => d.id === elementId);
+        if (elementData) {
+            elementData.backgroundColor = e.target.value;
+            syncLocalStorage();
+        }
+    })
     createHandles(selectedElement);
 }
 
@@ -506,11 +523,11 @@ canvas.addEventListener('keydown', (e) => {
     if (!selectedElement) {
         return;
     }
-    
+
     const elementId = parseInt(selectedElement.getAttribute('data-id'));
     const step = 5;
     let moved = false;
-    
+
     if (e.key === 'Delete' || e.key === 'Backspace') {
         selectedElement.remove();
         elementsMetaData = elementsMetaData.filter(data => data.id !== elementId);
@@ -520,7 +537,7 @@ canvas.addEventListener('keydown', (e) => {
         removeElementSelected();
         return;
     }
-    
+
     if (e.key === 'ArrowUp') {
         selectedElement.style.top = (parseInt(selectedElement.style.top) - step) + 'px';
         moved = true;
@@ -534,7 +551,7 @@ canvas.addEventListener('keydown', (e) => {
         selectedElement.style.left = (parseInt(selectedElement.style.left) + step) + 'px';
         moved = true;
     }
-    
+
     if (moved) {
         const elementData = elementsMetaData.find(d => d.id === elementId);
         if (elementData) {
