@@ -4,7 +4,7 @@ const verticalPanel = document.querySelector('.vertical-panel');
 const horizontalPanel = document.querySelector('.horizontal-panel');
 const colorSelector = document.querySelector('.color-selector');
 const layersContainer = document.querySelector('.layers');
-
+const editButtons = document.querySelectorAll('.editButtons');
 // Make canvas focusable for keyboard events
 canvas.setAttribute('tabindex', '0');
 
@@ -97,12 +97,7 @@ colorSelector.addEventListener('input', (e) => {
 
 
 function makeElementSelected() {
-    if (selectedElement) {
-        const element = canvas.querySelector(`[data-id='${selectedElement}']`);
-        if (element) {
-            element.classList.add('selected-element');
-        }
-    }
+    selectedElement.classList.add('selected-element');
 }
 
 function removeElementSelected() {
@@ -112,34 +107,22 @@ function removeElementSelected() {
 
 layersContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('layer-item')) {
-        const id = e.target.getAttribute('data-idLayer');
-        if (selectedElement === id) {
+        // const id = e.target.getAttribute('data-idLayer');
+        if (selectedElement === canvas.querySelector(`[data-id="${e.target.getAttribute('data-idLayer')}"]`)) {
             selectedElement = null;
             e.target.classList.remove('selected-layer');
             removeElementSelected();
             return;
         }
         removeElementSelected();
-        selectedElement = id;
+        selectedElement = canvas.querySelector(`[data-id="${e.target.getAttribute('data-idLayer')}"]`);
         document.querySelectorAll('.layer-item').forEach(layer => layer.classList.remove('selected-layer'));
         e.target.classList.add('selected-layer');
         makeElementSelected();
-        
-        // Focus canvas for keyboard events
+
         canvas.focus();
     }
 });
-
-function throttle(func, delay) {
-    let lastCall = 0;
-    return function (...args) {
-        const now = Date.now();
-        if (now - lastCall >= delay) {
-            lastCall = now;
-            func(...args);
-        }
-    };
-}
 
 createButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -306,7 +289,6 @@ canvas.addEventListener('click', (e) => {
         return;
     }
 
-    // Don't interfere if clicking on panels
     if (verticalPanel.contains(e.target) || horizontalPanel.contains(e.target)) {
         return;
     }
@@ -316,16 +298,15 @@ canvas.addEventListener('click', (e) => {
     if (clickedElement && clickedElement !== canvas) {
         const id = clickedElement.getAttribute('data-id');
 
-        if (selectedElement === id) {
+        if (selectedElement === clickedElement) {
             selectedElement = null;
             removeElementSelected();
             document.querySelectorAll('.layer-item').forEach(layer => layer.classList.remove('selected-layer'));
         } else {
             removeElementSelected();
-            selectedElement = id;
+            selectedElement = clickedElement;
             makeElementSelected();
-            
-            // Focus canvas for keyboard events
+
             canvas.focus();
 
             document.querySelectorAll('.layer-item').forEach(layer => {
@@ -347,14 +328,47 @@ canvas.addEventListener('keydown', (e) => {
         return;
     }
     if (e.key === 'Delete' || e.key === 'Backspace') {
-        const element = canvas.querySelector(`[data-id='${selectedElement}']`);
-        if (element) {
-            element.remove();
-            elementsMetaData = elementsMetaData.filter(data => data.id !== parseInt(selectedElement));
-            syncLayers();
-            syncLocalStorage();
-            selectedElement = null;
-            removeElementSelected();
-        }
+        selectedElement.remove();
+        elementsMetaData = elementsMetaData.filter(data => data.id !== parseInt(selectedElement.getAttribute('data-id')));
+        syncLayers();
+        syncLocalStorage();
+        selectedElement = null;
+        removeElementSelected();
     }
 });
+
+editButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        if (!selectedElement) {
+            return;
+        }
+        // const layerFunction = button.getAttribute('data-layerFunction');
+        // if (layerFunction === 'up') {
+        //     if (selectedElement == layersMetaData[layersMetaData.length - 1].id) {
+        //         return;
+        //     }
+        //     for (let i = 0; i < layersMetaData.length; i++) {
+        //         if (layersMetaData[i].id === parseInt(selectedElement)) {
+        //             layersMetaData[i].zIndex = layersMetaData[i].zIndex + 1;
+        //             layersMetaData[i + 1].zIndex = layersMetaData[i + 1].zIndex - 1;
+        //             break;
+        //         }
+        //     }
+        //     syncLayers();
+        //     syncLocalStorage();
+        // } else if (layerFunction === 'down') {
+        //     if (selectedElement == layersMetaData[0].id) {
+        //         return;
+        //     }
+        //     for (let i = 0; i < layersMetaData.length; i++) {
+        //         if (layersMetaData[i].id === parseInt(selectedElement)) {
+        //             layersMetaData[i].zIndex = layersMetaData[i].zIndex - 1;
+        //             layersMetaData[i - 1].zIndex = layersMetaData[i - 1].zIndex + 1;
+        //             break;
+        //         }
+        //     }
+        // }
+        // syncLayers();
+        // syncLocalStorage();
+    })
+}) 
