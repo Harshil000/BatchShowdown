@@ -8,6 +8,10 @@ const editButtons = document.querySelectorAll('.editButtons');
 const exportButton = document.querySelector('.export');
 const showcaseText = document.querySelector('.showcase-text');
 const dropdownOptions = document.querySelector('.dropdown-options');
+const textEditorholder = document.querySelector('.textEditorholder');
+const textEditorTextarea = textEditorholder.querySelector('textarea');
+const textEditorButton = textEditorholder.querySelector('button');
+const textColorSelector = textEditorholder.querySelector('.text-color-selector');
 // Make canvas focusable for keyboard events
 canvas.setAttribute('tabindex', '0');
 
@@ -94,6 +98,7 @@ elementsMetaData.forEach(data => {
     newElement.setAttribute('data-id', data.id);
     if (data.type === 'text') {
         newElement.innerText = data.content;
+        newElement.style.color = data.textColor || '#ffffff';
     }
     canvas.appendChild(newElement);
 });
@@ -242,6 +247,12 @@ function makeElementSelected() {
             syncLocalStorage();
         }
     })
+
+    if (selectedElement.innerText !== '') {
+        textEditorholder.classList.add('visible');
+        textEditorTextarea.value = selectedElement.innerText;
+        textColorSelector.value = rgbToHex(selectedElement.style.color || '#ffffff');
+    }
     createHandles(selectedElement);
 }
 
@@ -251,7 +262,40 @@ function removeElementSelected() {
     document.querySelectorAll('.selected-layer').forEach(el => el.classList.remove('selected-layer'));
     selectedElement = null;
     selectedLayer = null;
+    textEditorholder.classList.remove('visible');
+    textEditorTextarea.value = '';
 }
+
+// Live update text as user types
+textEditorTextarea.addEventListener('input', () => {
+    if (selectedElement && selectedElement.innerText !== undefined) {
+        selectedElement.innerText = textEditorTextarea.value;
+    }
+});
+
+// Live update text color
+textColorSelector.addEventListener('input', () => {
+    if (selectedElement) {
+        selectedElement.style.color = textColorSelector.value;
+    }
+});
+
+// Save text on Edit button click
+textEditorButton.addEventListener('click', () => {
+    if (!selectedElement) return;
+    
+    const elementId = parseInt(selectedElement.getAttribute('data-id'));
+    const elementData = elementsMetaData.find(d => d.id === elementId);
+    
+    if (elementData && elementData.type === 'text') {
+        elementData.content = textEditorTextarea.value;
+        elementData.textColor = textColorSelector.value;
+        syncLocalStorage();
+    }
+    
+    textEditorholder.classList.remove('visible');
+    canvas.focus();
+});
 
 layersContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('layer-item')) {
@@ -289,6 +333,14 @@ verticalPanel.addEventListener('pointerdown', (e) => {
 });
 
 horizontalPanel.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+});
+
+textEditorholder.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+});
+
+textEditorholder.addEventListener('click', (e) => {
     e.stopPropagation();
 });
 
@@ -531,7 +583,7 @@ canvas.addEventListener('keydown', (e) => {
     const step = 5;
     let moved = false;
 
-    if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (e.key === 'Delete') {
         selectedElement.remove();
         elementsMetaData = elementsMetaData.filter(data => data.id !== elementId);
         syncLayers();

@@ -33,6 +33,82 @@ body {
   position: relative;
   z-index: 0;
 }
+.canvas .textEditorholder {
+  position: absolute;
+  top: -6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 5rem;
+  width: 50%;
+  background-color: #34393b;
+  z-index: 9999;
+  border-radius: 0 0 1rem 1rem;
+  padding: 0.75rem 1rem;
+  gap: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  justify-content: center;
+  transition: top 0.3s ease;
+}
+.canvas .textEditorholder.visible {
+  top: 0;
+}
+.canvas .textEditorholder textarea {
+  flex: 1;
+  height: 100%;
+  background-color: #2a2e30;
+  border: 2px solid var(--selected-layer-color);
+  border-radius: 0.5rem;
+  color: #f0f0f0;
+  font-family: system-ui;
+  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  resize: none;
+  outline: none;
+  transition: border-color 0.25s ease;
+}
+.canvas .textEditorholder textarea:focus {
+  border-color: var(--selected-button-color);
+}
+.canvas .textEditorholder textarea::-moz-placeholder {
+  color: #888;
+}
+.canvas .textEditorholder textarea::placeholder {
+  color: #888;
+}
+.canvas .textEditorholder .text-color-selector {
+  height: 100%;
+  aspect-ratio: 1/1;
+  border: 2px solid var(--selected-layer-color);
+  border-radius: 0.5rem;
+  background-color: #2a2e30;
+  cursor: pointer;
+  padding: 2px;
+  transition: border-color 0.25s ease;
+}
+.canvas .textEditorholder .text-color-selector:hover {
+  border-color: var(--selected-button-color);
+}
+.canvas .textEditorholder button {
+  height: 100%;
+  padding: 0.5rem 1.5rem;
+  background-color: #4a9d4a;
+  border: none;
+  border-radius: 0.5rem;
+  color: #f0f0f0;
+  font-family: system-ui;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.canvas .textEditorholder button:hover {
+  background-color: #5ab85a;
+}
+.canvas .textEditorholder button:active {
+  transform: scale(0.95);
+}
 .canvas .vertical-panel {
   position: absolute;
   top: 50%;
