@@ -18,6 +18,9 @@ let selectedLayer = null;
 let layersMetaData = [];
 let boxNumber = null;
 let textBoxNumber = null;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
 
 if (localStorage.getItem('Zindex')) {
     Zindex = parseInt(localStorage.getItem('Zindex'));
@@ -83,8 +86,8 @@ elementsMetaData.forEach(data => {
     newElement.style.position = 'absolute';
     newElement.style.borderRadius = '1rem';
     newElement.style.transform = data.transform;
-    newElement.style.transition = 'all 0.3s ease';
     newElement.style.cursor = 'pointer';
+    newElement.classList.add('card');
     newElement.setAttribute('data-id', data.id);
     if (data.type === 'text') {
         newElement.innerText = data.content;
@@ -150,6 +153,67 @@ horizontalPanel.addEventListener('pointerdown', (e) => {
 
 canvas.addEventListener('pointerdown', (e) => {
     if (!selectedButton) {
+        let card = e.target.closest('.card');
+        if (!card) return;
+
+        isDragging = false;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+
+        const rect = card.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+
+        function onPointerMove(ev) {
+            if (ev.pointerId !== e.pointerId) return;
+            
+            const dragDistance = Math.sqrt(
+                Math.pow(ev.clientX - dragStartX, 2) + 
+                Math.pow(ev.clientY - dragStartY, 2)
+            );
+            
+            if (dragDistance > 5) {
+                isDragging = true;
+            }
+            
+            const canvasRect = canvas.getBoundingClientRect();
+            const cardWidth = card.offsetWidth;
+            const cardHeight = card.offsetHeight;
+            
+            let left = ev.clientX - offsetX;
+            let top = ev.clientY - offsetY;
+            const minLeft = 0;
+            const minTop = 0;
+            const maxLeft = canvasRect.width - cardWidth;
+            const maxTop = canvasRect.height - cardHeight;
+            
+            left = Math.max(minLeft, Math.min(left, maxLeft));
+            top = Math.max(minTop, Math.min(top, maxTop));
+            
+            card.style.left = left + 'px';
+            card.style.top = top + 'px';
+        }
+
+        canvas.addEventListener('pointermove', onPointerMove);
+
+        function cleanup() {
+            const elementId = parseInt(card.getAttribute('data-id'));
+            const elementData = elementsMetaData.find(data => data.id === elementId);
+            
+            if (elementData) {
+                elementData.left = card.style.left;
+                elementData.top = card.style.top;
+                syncLocalStorage();
+            }
+            
+            canvas.removeEventListener('pointermove', onPointerMove);
+            canvas.removeEventListener('pointerup', cleanup);
+            
+            setTimeout(() => {
+                isDragging = false;
+            }, 10);
+        }
+        canvas.addEventListener('pointerup', cleanup);
         return;
     }
 
@@ -208,6 +272,7 @@ canvas.addEventListener('pointerdown', (e) => {
         let height = Math.abs(ev.y - e.y);
         let width = Math.abs(ev.x - e.x);
         const newElement = document.createElement('div');
+        newElement.classList.add('card');
         newElement.style.top = `${e.y}px`;
         newElement.style.left = `${e.x}px`;
         newElement.style.height = `${height}px`;
@@ -217,7 +282,6 @@ canvas.addEventListener('pointerdown', (e) => {
         newElement.style.padding = '0.5rem';
         newElement.style.position = 'absolute';
         newElement.style.borderRadius = '1rem';
-        newElement.style.transition = 'all 0.3s ease';
         newElement.style.cursor = 'pointer';
         if (currentMouseY < e.y) {
             newElement.style.transform = 'translateY(-100%)';
@@ -286,6 +350,10 @@ canvas.addEventListener('pointerdown', (e) => {
 
 canvas.addEventListener('click', (e) => {
     if (selectedButton) {
+        return;
+    }
+
+    if (isDragging) {
         return;
     }
 
