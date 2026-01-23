@@ -8,7 +8,8 @@
 }
 
 :root {
-  --selected-color: #56666b;
+  --selected-button-color: #56666b;
+  --selected-layer-color: #4a4f51;
 }
 
 body,
@@ -38,7 +39,7 @@ body {
   left: 1rem;
   height: 90%;
   border-radius: 0.5rem;
-  width: 2.5rem;
+  width: 5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -55,7 +56,7 @@ body {
   justify-content: space-evenly;
 }
 .canvas .vertical-panel .createButtonsContainer .selectedButton {
-  background-color: var(--selected-color);
+  background-color: var(--selected-button-color);
 }
 .canvas .vertical-panel .createButtonsContainer .createButton {
   width: 80%;
@@ -63,12 +64,15 @@ body {
   padding: 2px;
   border-radius: 8px;
   transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
 }
 .canvas .vertical-panel .createButtonsContainer .createButton:hover {
-  background-color: var(--selected-color);
+  background-color: var(--selected-button-color);
 }
 .canvas .vertical-panel .createButtonsContainer .createButton img {
-  width: 100%;
+  width: 60%;
   aspect-ratio: 1/1;
   -o-object-fit: contain;
      object-fit: contain;
@@ -76,6 +80,43 @@ body {
 .canvas .vertical-panel .layers {
   height: 82%;
   width: 95%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  justify-content: flex-start;
+  gap: 6px;
+  overflow-y: scroll;
+}
+.canvas .vertical-panel .layers::-webkit-scrollbar {
+  width: 2px;
+}
+.canvas .vertical-panel .layers::-webkit-scrollbar-track {
+  background: transparent;
+}
+.canvas .vertical-panel .layers::-webkit-scrollbar-thumb {
+  background-color: #000000;
+  border-radius: 1px;
+}
+.canvas .vertical-panel .layers .selected-layer {
+  background-color: var(--selected-button-color);
+  border-radius: 4px;
+}
+.canvas .vertical-panel .layers .layer-item {
+  width: 95%;
+  padding: 1px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  border-top: 2px solid var(--selected-layer-color);
+  border-bottom: 2px solid var(--selected-layer-color);
+  font-size: 1rem;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+.canvas .vertical-panel .layers .layer-item:hover {
+  background-color: var(--selected-button-color);
+  border-radius: 4px;
 }
 .canvas .horizontal-panel {
   position: absolute;
@@ -102,11 +143,14 @@ body {
 }
 .canvas .horizontal-panel .editButtons:hover {
   cursor: pointer;
-  background-color: var(--selected-color);
+  background-color: var(--selected-button-color);
 }
 .canvas .horizontal-panel .editButtons img {
   height: 60%;
   aspect-ratio: 1/1;
   -o-object-fit: contain;
      object-fit: contain;
+}
+.canvas .selected-element {
+  outline: 4px solid green;
 }/*# sourceMappingURL=index.css.map */

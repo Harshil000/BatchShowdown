@@ -3,15 +3,23 @@ const canvas = document.querySelector('.canvas');
 const verticalPanel = document.querySelector('.vertical-panel');
 const horizontalPanel = document.querySelector('.horizontal-panel');
 const colorSelector = document.querySelector('.color-selector');
+const layersContainer = document.querySelector('.layers');
+
+// Make canvas focusable for keyboard events
+canvas.setAttribute('tabindex', '0');
+
 let selectedButton = null;
 let color = colorSelector.value;
 let Zindex = null;
 let elementsMetaData = null;
 let uniqueIdCounter = null;
 let selectedElement = null;
+let layersMetaData = [];
+let boxNumber = null;
+let textBoxNumber = null;
 
 if (localStorage.getItem('Zindex')) {
-    Zindex = localStorage.getItem('Zindex');
+    Zindex = parseInt(localStorage.getItem('Zindex'));
 } else {
     Zindex = 1;
 }
@@ -28,12 +36,39 @@ if (localStorage.getItem('elementsMetaData')) {
     elementsMetaData = [];
 }
 
+if (localStorage.getItem('boxNumber')) {
+    boxNumber = parseInt(localStorage.getItem('boxNumber'));
+} else {
+    boxNumber = 1;
+}
+
+if (localStorage.getItem('textBoxNumber')) {
+    textBoxNumber = parseInt(localStorage.getItem('textBoxNumber'));
+} else {
+    textBoxNumber = 1;
+}
+
 function syncLocalStorage() {
     localStorage.setItem('elementsMetaData', JSON.stringify(elementsMetaData));
     localStorage.setItem('Zindex', Zindex);
     localStorage.setItem('uniqueIdCounter', uniqueIdCounter);
+    localStorage.setItem('boxNumber', boxNumber);
+    localStorage.setItem('textBoxNumber', textBoxNumber);
 }
 
+function syncLayers() {
+    layersMetaData = elementsMetaData.sort((a, b) => b.zIndex - a.zIndex);
+    layersContainer.innerHTML = '';
+    layersMetaData.forEach((data) => {
+        const layer = document.createElement('span');
+        layer.classList.add('layer-item');
+        layer.innerHTML = `${data.type === 'text' ? 'Text ' : 'Box '} ${data.type === 'text' ? data.textBoxNumber : data.boxNumber}`;;
+        layer.setAttribute('data-idLayer', data.id);
+        layersContainer.appendChild(layer);
+    });
+}
+
+syncLayers();
 
 elementsMetaData.forEach(data => {
     const newElement = document.createElement('div');
@@ -47,12 +82,55 @@ elementsMetaData.forEach(data => {
     newElement.style.position = 'absolute';
     newElement.style.borderRadius = '1rem';
     newElement.style.transform = data.transform;
+    newElement.style.transition = 'all 0.3s ease';
+    newElement.style.cursor = 'pointer';
     newElement.setAttribute('data-id', data.id);
     if (data.type === 'text') {
         newElement.innerText = data.content;
     }
     canvas.appendChild(newElement);
 });
+
+colorSelector.addEventListener('input', (e) => {
+    color = e.target.value;
+});
+
+
+function makeElementSelected() {
+    if (selectedElement) {
+        const element = canvas.querySelector(`[data-id='${selectedElement}']`);
+        if (element) {
+            element.classList.add('selected-element');
+        }
+    }
+}
+
+function removeElementSelected() {
+    document.querySelectorAll('.selected-element').forEach(el => el.classList.remove('selected-element'));
+    selectedElement = null;
+}
+
+layersContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('layer-item')) {
+        const id = e.target.getAttribute('data-idLayer');
+        if (selectedElement === id) {
+            selectedElement = null;
+            e.target.classList.remove('selected-layer');
+            removeElementSelected();
+            return;
+        }
+        removeElementSelected();
+        selectedElement = id;
+        document.querySelectorAll('.layer-item').forEach(layer => layer.classList.remove('selected-layer'));
+        e.target.classList.add('selected-layer');
+        makeElementSelected();
+        
+        // Focus canvas for keyboard events
+        canvas.focus();
+    }
+});
+
+
 
 function throttle(func, delay) {
     let lastCall = 0;
@@ -158,6 +236,8 @@ canvas.addEventListener('pointerdown', (e) => {
         newElement.style.padding = '0.5rem';
         newElement.style.position = 'absolute';
         newElement.style.borderRadius = '1rem';
+        newElement.style.transition = 'all 0.3s ease';
+        newElement.style.cursor = 'pointer';
         if (currentMouseY < e.y) {
             newElement.style.transform = 'translateY(-100%)';
         } else {
@@ -173,7 +253,7 @@ canvas.addEventListener('pointerdown', (e) => {
         newElement.setAttribute('data-id', uniqueId);
 
         if (selectedButton.id == 'createText') {
-            newElement.innerText = 'Edit text';
+            newElement.innerText = `Text Box ${textBoxNumber}`;
             elementsMetaData.push({
                 id: uniqueId,
                 top: `${e.y}px`,
@@ -184,8 +264,11 @@ canvas.addEventListener('pointerdown', (e) => {
                 zIndex: Zindex - 1,
                 type: 'text',
                 transform: newElement.style.transform,
-                content: 'Edit text',
-            })
+                textBoxNumber: textBoxNumber,
+                content: `Text Box ${textBoxNumber}`,
+            });
+            textBoxNumber++;
+            syncLayers();
             syncLocalStorage();
         } else {
             elementsMetaData.push({
@@ -198,7 +281,10 @@ canvas.addEventListener('pointerdown', (e) => {
                 zIndex: Zindex - 1,
                 type: 'solid',
                 transform: newElement.style.transform,
-            })
+                boxNumber: boxNumber,
+            });
+            boxNumber++;
+            syncLayers();
             syncLocalStorage();
         }
         canvas.appendChild(newElement);
@@ -217,6 +303,56 @@ canvas.addEventListener('pointerdown', (e) => {
     canvas.addEventListener('pointerup', handlePointerUp);
 })
 
-colorSelector.addEventListener('input', (e) => {
-    color = e.target.value;
+canvas.addEventListener('click', (e) => {
+
+    if (selectedButton) {
+        return;
+    }
+
+    const clickedElement = e.target.closest('[data-id]');
+
+    if (clickedElement && clickedElement !== canvas) {
+        const id = clickedElement.getAttribute('data-id');
+
+        if (selectedElement === id) {
+            selectedElement = null;
+            removeElementSelected();
+            document.querySelectorAll('.layer-item').forEach(layer => layer.classList.remove('selected-layer'));
+        } else {
+            removeElementSelected();
+            selectedElement = id;
+            makeElementSelected();
+            
+            // Focus canvas for keyboard events
+            canvas.focus();
+
+            document.querySelectorAll('.layer-item').forEach(layer => {
+                if (layer.getAttribute('data-idLayer') === id) {
+                    layer.classList.add('selected-layer');
+                } else {
+                    layer.classList.remove('selected-layer');
+                }
+            });
+        }
+    } else {
+        removeElementSelected();
+        document.querySelectorAll('.layer-item').forEach(layer => layer.classList.remove('selected-layer'));
+    }
 })
+
+canvas.addEventListener('keydown', (e) => {
+    if (!selectedElement) {
+        return;
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        const element = canvas.querySelector(`[data-id='${selectedElement}']`);
+        if (element) {
+            element.remove();
+            elementsMetaData = elementsMetaData.filter(data => data.id !== parseInt(selectedElement));
+            syncLayers();
+            syncLocalStorage();
+            selectedElement = null;
+            removeElementSelected();
+        }
+    }
+});
